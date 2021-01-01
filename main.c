@@ -3,6 +3,8 @@
 
 #include <SDL.h>
 #include <SDL_opengl.h>
+#include <time.h>
+#include <math.h>
 
 #include <stdio.h>
 
@@ -57,6 +59,24 @@ typedef enum t_attrib_id {
 	attrib_color
 } t_attrib_id;
 
+
+typedef struct {
+	float x;
+	float y;
+	float z;
+} cameraDirection;
+
+void rotateCamera(cameraDirection* cd, float horizontal, float vertical){
+	cd->y += vertical;
+	float x = cd->x * cosf(horizontal) - cd->z * sinf(horizontal);
+	float z = cd->x * sinf(horizontal) + cd->z * cosf(horizontal);
+	cd->x = x;
+	cd->z = z;
+	x = sqrtf(cd->x * cd->x + cd->y * cd->y + cd->z * cd->z);
+	cd->x /= x;
+	cd->y /= x;
+	cd->z /= x;
+}
 
 int main(int argc, char * argv[]) {
 	int bufferSize = 2048;
@@ -128,6 +148,7 @@ int main(int argc, char * argv[]) {
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
+
 	glEnableVertexAttribArray(attrib_position);
 	glEnableVertexAttribArray(attrib_color);
 
@@ -144,16 +165,27 @@ int main(int argc, char * argv[]) {
 		0, 0, 1, 1, width, height,
 		1, 1, 1, 1, 0, height
 	};
-
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
 	t_mat4x4 projection_matrix;
 	mat4x4_ortho(projection_matrix, 0.0f, (float)width, (float)height, 0.0f, 0.0f, 100.0f);
-	glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, projection_matrix);
 
+	glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, projection_matrix);
+	glUniform2f(glGetUniformLocation(program, "iResolution"), (GLfloat)width, (GLfloat)height);
+	glUniform1f(glGetUniformLocation(program, "iTime"), (GLfloat)clock());
+	glUniform2f(glGetUniformLocation(program, "iMouse"), (GLfloat)0, (GLfloat)0);
+
+	cameraDirection cd = {0};
+	cd.x = 1;
+
+	glUniform3f(glGetUniformLocation(program, "iCameraDirection"),
+		(GLfloat)cd.x,
+		(GLfloat)cd.y,
+		(GLfloat)cd.z);
+
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 	for(;;) {
 		glClear(GL_COLOR_BUFFER_BIT);
-
 		SDL_Event event;
 		while(SDL_PollEvent(&event)) {
 			switch(event.type) {
@@ -161,9 +193,19 @@ int main(int argc, char * argv[]) {
 					if(event.key.keysym.sym == SDLK_ESCAPE)
 						return 0;
 					break;
+				case SDL_MOUSEMOTION:
+					glUniform2f(glGetUniformLocation(program, "iMouse"), (GLfloat)event.motion.x, (GLfloat)event.motion.y);
+					glUniform3f(glGetUniformLocation(program, "iCameraDirection"),
+						(GLfloat)cd.x,
+						(GLfloat)cd.y,
+						(GLfloat)cd.z);
+					rotateCamera(&cd, (float)event.motion.xrel / 100.0, -(float)event.motion.yrel / 100.0);
+					break;
+
 			}
 		}
 
+		glUniform1f(glGetUniformLocation(program, "iTime"), (GLfloat)clock());
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
