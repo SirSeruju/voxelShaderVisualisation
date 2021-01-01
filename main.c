@@ -3,6 +3,7 @@
 
 #include <SDL.h>
 #include <SDL_opengl.h>
+#include <SOIL/SOIL.h>
 #include <time.h>
 #include <math.h>
 
@@ -66,6 +67,12 @@ typedef struct {
 	float z;
 } cameraDirection;
 
+typedef struct {
+	float x;
+	float y;
+	float z;
+} cameraPosition;
+
 void rotateCamera(cameraDirection* cd, float horizontal, float vertical){
 	cd->y += vertical;
 	float x = cd->x * cosf(horizontal) - cd->z * sinf(horizontal);
@@ -94,8 +101,8 @@ int main(int argc, char * argv[]) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-	static const int width = 800;
-	static const int height = 600;
+	static const int width = 1920;
+	static const int height = 1080;
 
 	SDL_Window * window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 	SDL_GLContext context = SDL_GL_CreateContext(window);
@@ -175,12 +182,11 @@ int main(int argc, char * argv[]) {
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	const GLfloat voxels[] = {
-		1, 1, 1,
-		1, 0, 1,
-		1, 1, 1
-	};
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, 3, 3, 1, 0, GL_RED, GL_FLOAT, voxels);
+
+	int vW, vH;
+	unsigned char* image = SOIL_load_image("image.png", &vW, &vH, NULL, SOIL_LOAD_RGBA);
+	int vS = (vW < vH) ? vW : vH;
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, vS, vS, vS, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
 
 	t_mat4x4 projection_matrix;
@@ -192,12 +198,17 @@ int main(int argc, char * argv[]) {
 	glUniform2f(glGetUniformLocation(program, "iMouse"), (GLfloat)0, (GLfloat)0);
 
 	cameraDirection cd = {0};
+	cameraPosition cp = {-2, -2, 0};
 	cd.x = 1;
 
 	glUniform3f(glGetUniformLocation(program, "iCameraDirection"),
 		(GLfloat)cd.x,
 		(GLfloat)cd.y,
 		(GLfloat)cd.z);
+	glUniform3f(glGetUniformLocation(program, "iCameraPosition"),
+		(GLfloat)cp.x,
+		(GLfloat)cp.y,
+		(GLfloat)cp.z);
 
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	for(;;) {
@@ -205,9 +216,21 @@ int main(int argc, char * argv[]) {
 		SDL_Event event;
 		while(SDL_PollEvent(&event)) {
 			switch(event.type) {
-				case SDL_KEYUP:
+				case SDL_KEYDOWN:
 					if(event.key.keysym.sym == SDLK_ESCAPE)
 						return 0;
+					else if(event.key.keysym.sym == SDLK_w){
+						float scale = 2.0;
+						cp.x += cd.x * scale;
+						cp.y += cd.y * scale;
+						cp.z += cd.z * scale;
+					}
+					else if(event.key.keysym.sym == SDLK_s){
+						float scale = -2.0;
+						cp.x += cd.x * scale;
+						cp.y += cd.y * scale;
+						cp.z += cd.z * scale;
+					}
 					break;
 				case SDL_MOUSEMOTION:
 					glUniform2f(glGetUniformLocation(program, "iMouse"), (GLfloat)event.motion.x, (GLfloat)event.motion.y);
@@ -215,13 +238,17 @@ int main(int argc, char * argv[]) {
 						(GLfloat)cd.x,
 						(GLfloat)cd.y,
 						(GLfloat)cd.z);
-					rotateCamera(&cd, (float)event.motion.xrel / 100.0, -(float)event.motion.yrel / 100.0);
+					rotateCamera(&cd, -(float)event.motion.xrel / 800.0, -(float)event.motion.yrel / 800.0);
 					break;
 
 			}
 		}
 
 		glUniform1f(glGetUniformLocation(program, "iTime"), (GLfloat)clock());
+		glUniform3f(glGetUniformLocation(program, "iCameraPosition"),
+			(GLfloat)cp.x,
+			(GLfloat)cp.y,
+			(GLfloat)cp.z);
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
