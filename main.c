@@ -166,6 +166,22 @@ int main(int argc, char * argv[]) {
 		1, 1, 1, 1, 0, height
 	};
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+	
+	GLuint tex;
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_3D, tex);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	const GLfloat voxels[] = {
+		1, 1, 1,
+		1, 0, 1,
+		1, 1, 1
+	};
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, 3, 3, 1, 0, GL_RED, GL_FLOAT, voxels);
+
 
 	t_mat4x4 projection_matrix;
 	mat4x4_ortho(projection_matrix, 0.0f, (float)width, (float)height, 0.0f, 0.0f, 100.0f);
