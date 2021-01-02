@@ -124,7 +124,7 @@ int main(int argc, char * argv[]) {
 	vs = glCreateShader(GL_VERTEX_SHADER);
 	fs = glCreateShader(GL_FRAGMENT_SHADER);
 
-	loadFile(buffer, bufferSize, "shader.vert");
+	loadFile(buffer, bufferSize, "shaders/shader.vert");
 	glShaderSource(vs, 1, (const GLchar **)&buffer, NULL);
 	glCompileShader(vs);
 
@@ -136,7 +136,7 @@ int main(int argc, char * argv[]) {
 		return 1;
 	}
 
-	loadFile(buffer, bufferSize, "shader.frag");
+	loadFile(buffer, bufferSize, "shaders/shader.frag");
 	glShaderSource(fs, 1, (const GLchar **)&buffer, NULL);
 	glCompileShader(fs);
 
@@ -196,7 +196,7 @@ int main(int argc, char * argv[]) {
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	int vW, vH;
-	unsigned char* image = SOIL_load_image("image.png", &vW, &vH, NULL, SOIL_LOAD_RGBA);
+	unsigned char* image = SOIL_load_image("images/image.png", &vW, &vH, NULL, SOIL_LOAD_RGBA);
 	int vS = (vW < vH) ? vW : vH;
 	if((float)(vW * vH) / (float)(vS * vS * vS) != 1.0){
 		printf("Invalid image format, one side must be volume size, other size * size");
