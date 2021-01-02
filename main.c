@@ -85,6 +85,18 @@ void rotateCamera(cameraDirection* cd, float horizontal, float vertical){
 	cd->z /= x;
 }
 
+void moveForward(cameraDirection cd, cameraPosition* cp, float speed) {
+	cp->x += cd.x * speed;
+	cp->y += cd.y * speed;
+	cp->z += cd.z * speed;
+}
+
+void moveBackward(cameraDirection cd, cameraPosition* cp, float speed) {
+	cp->x -= cd.x * speed;
+	cp->y -= cd.y * speed;
+	cp->z -= cd.z * speed;
+}
+
 int main(int argc, char * argv[]) {
 	int bufferSize = 2048;
 	char *buffer = malloc(bufferSize * sizeof(char));
@@ -220,16 +232,10 @@ int main(int argc, char * argv[]) {
 					if(event.key.keysym.sym == SDLK_ESCAPE)
 						return 0;
 					else if(event.key.keysym.sym == SDLK_w){
-						float scale = 2.0;
-						cp.x += cd.x * scale;
-						cp.y += cd.y * scale;
-						cp.z += cd.z * scale;
+						moveForward(cd, &cp, 0.5);
 					}
 					else if(event.key.keysym.sym == SDLK_s){
-						float scale = -2.0;
-						cp.x += cd.x * scale;
-						cp.y += cd.y * scale;
-						cp.z += cd.z * scale;
+						moveBackward(cd, &cp, 0.5);
 					}
 					break;
 				case SDL_MOUSEMOTION:

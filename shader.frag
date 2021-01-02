@@ -9,7 +9,7 @@ uniform vec3 iCameraDirection;
 uniform vec3 iCameraPosition;
 uniform sampler3D voxels;
 
-#define MAX_DISTANCE 500.0
+#define MAX_DISTANCE 30.0
 
 vec4 getVoxel(vec3 c){
 	//if(min(vec3(0), c) != vec3(0)) return 0.0;
@@ -47,7 +47,7 @@ vec4 voxelCast(vec3 ro, vec3 rd, float maxDist){
 		ic += stepC * s;
 		tMax += tDelta * s;
 	}
-	return getVoxel(ic);
+	return getVoxel(ic) * (1.0 - t / maxDist);
 }
 
 void main() {
