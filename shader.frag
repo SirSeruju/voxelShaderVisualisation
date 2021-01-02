@@ -12,8 +12,6 @@ uniform sampler3D voxels;
 #define MAX_DISTANCE 30.0
 
 vec4 getVoxel(vec3 c){
-	//if(min(vec3(0), c) != vec3(0)) return 0.0;
-	//if(max(vec3(1), c) != vec3(1)) return 0.0;
 	return texture(voxels, c / vec3(textureSize(voxels, 0)));
 }
 

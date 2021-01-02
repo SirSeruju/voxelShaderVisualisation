@@ -198,6 +198,10 @@ int main(int argc, char * argv[]) {
 	int vW, vH;
 	unsigned char* image = SOIL_load_image("image.png", &vW, &vH, NULL, SOIL_LOAD_RGBA);
 	int vS = (vW < vH) ? vW : vH;
+	if((float)(vW * vH) / (float)(vS * vS * vS) != 1.0){
+		printf("Invalid image format, one side must be volume size, other size * size");
+		exit(1);
+	}
 	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, vS, vS, vS, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
 
