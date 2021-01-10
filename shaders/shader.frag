@@ -7,13 +7,19 @@ uniform float iTime;
 uniform vec2 iMouse;
 uniform vec3 iCameraDirection;
 uniform vec3 iCameraPosition;
-uniform sampler3D voxels;
 
-#define MAX_DISTANCE 30.0
+struct voxel {
+	uint index;
+	uint color;
+};
 
-vec4 getVoxel(vec3 c){
-	return texture(voxels, c / vec3(textureSize(voxels, 0)));
-}
+uniform sampler1D colors;
+uniform octree {
+	voxel voxels[];
+};
+
+#define MAX_DISTANCE 300.0
+
 
 mat2 rot(float a) {
 	float c = cos(a);
@@ -31,6 +37,15 @@ vec3 rotCam(vec2 uv, vec3 p, vec3 f, float z) {;
 }
 
 vec4 voxelCast(vec3 ro, vec3 rd, float maxDist){
+	return texture(colors, 0);
+}
+
+/*
+vec4 getVoxel(vec3 c){
+	return texture(voxels, c / vec3(textureSize(voxels, 0)));
+}
+
+vec4 voxelCast(vec3 ro, vec3 rd, float maxDist){
 	float t = 0.0;
 	vec3 ic = floor(ro);
 	vec3 stepC = sign(rd);
@@ -45,8 +60,10 @@ vec4 voxelCast(vec3 ro, vec3 rd, float maxDist){
 		ic += stepC * s;
 		tMax += tDelta * s;
 	}
+	return texture(colors, 0);
 	return getVoxel(ic) * (1.0 - t / maxDist);
 }
+*/
 
 void main() {
 	vec2 uv = (gl_FragCoord.xy - 0.5 * iResolution.xy) / iResolution.y;
@@ -56,6 +73,7 @@ void main() {
 	vec3 rd = iCameraDirection;
 	rd = rotCam(uv, ro, rd, 1.0);
 
+	//vec4 col = texture(colors, uv.x);
 	vec4 col = voxelCast(ro, rd, MAX_DISTANCE);
 
 	o_color = col;

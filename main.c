@@ -186,23 +186,40 @@ int main(int argc, char * argv[]) {
 	};
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 	
-	GLuint tex;
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_3D, tex);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
+	GLuint colors;
+	glGenTextures(1, &colors);
+	glBindTexture(GL_TEXTURE_1D, colors);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	int vW, vH;
-	unsigned char* image = SOIL_load_image("images/image.png", &vW, &vH, NULL, SOIL_LOAD_RGBA);
-	int vS = (vW < vH) ? vW : vH;
-	if((float)(vW * vH) / (float)(vS * vS * vS) != 1.0){
-		printf("Invalid image format, one side must be volume size, other size * size");
-		exit(1);
-	}
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, vS, vS, vS, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+	unsigned char* image = SOIL_load_image("images/colors.png", &vW, &vH, NULL, SOIL_LOAD_RGBA);
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, vW * vH, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+	glBindTexture(GL_TEXTURE_1D, 0);
+	SOIL_free_image_data(image);
+
+	GLuint voxels;
+	struct voxel{
+		GLuint index;
+		GLuint color;
+	};
+	struct voxel voxelsBuffer[2];
+	voxelsBuffer[0].color = 2;
+	glGenBuffers(1, &voxels);
+	glBindBuffer(GL_UNIFORM_BUFFER, voxels);
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(struct voxel), 0, GL_STATIC_READ);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, 2 * sizeof(struct voxel), &voxelsBuffer);
+
+	glUniformBlockBinding(program, glGetUniformBlockIndex(program, "octree"), 1);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 1, voxels); 
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_1D, colors);
+	glUniform1i(glGetUniformLocation(program, "colors"), 0);
 
 
 	t_mat4x4 projection_matrix;
